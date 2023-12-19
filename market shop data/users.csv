@@ -1,0 +1,15 @@
+﻿id,email,user_role,name,password
+roll01,roll01@yahoo.com,customer,user1,pass
+roll07,roll07@yahoo.com,shopkeeper,user2,secret
+roll14,roll14@yahoo.com,admin,user3,password
+roll02,roll02@yahoo.com,customer,user4,abc123
+roll08,roll08@yahoo.com,shopkeeper,user5,passcode
+roll09,roll09@yahoo.com,shopkeeper,user6,hello
+roll10,roll10@yahoo.com,shopkeeper,user7,beats123
+roll03,roll03@yahoo.com,customer,user8,tellno
+roll13,roll13@yahoo.com,admin,user9,canttell
+roll04,roll04@yahoo.com,customer,user10,qwerty
+roll05,roll05@yahoo.com,customer,user11,mydelf
+roll11,roll11@yahoo.com,shopkeeper,user12,abcd123
+roll12,roll12@yahoo.com,shopkeeper,user13,user8123
+roll06,roll06@yahoo.com,customer,user14,asdf5678

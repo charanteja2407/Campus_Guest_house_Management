@@ -1,0 +1,761 @@
+create table person( roll_no varchar(10), name varchar(225) not null, email varchar(225) not null, password varchar(225) not null, branch varchar(225)not null, hostel_name varchar(225) not null, room_no varchar(10) not null, primary key (roll_no));
+
+create table booking( booked_by_roll_no varchar(10), no_of_guests int, no_of_rooms int, foreign key (booked_by_roll_no) references person(roll_no));
+
+create table staff( name varchar(225), role varchar(225), staff_id varchar(225), phone_no varchar(10),primary key (staff_id));
+
+create table rooms( room_no varchar(225), booked_by_roll varchar(10),staff_id varchar(225), primary key (room_no), foreign key (booked_by_roll) references person(roll_no),FOREIGN KEY (staff_id) REFERENCES staff(staff_id));
+
+create table guests(related_to_roll varchar(10), guest_name varchar(225), aadhar_no varchar(225), occupation varchar(225),room_no varchar(225), check_in date, check_out date,primary key(guest_name), foreign key (related_to_roll) references person(roll_no), foreign key (room_no) references rooms(room_no));
+
+create table food( for_date date , bf_count int , lunch_count int , dinner_count int, guest_name varchar(225),room_no varchar(225), foreign key (room_no) references rooms(room_no), primary key (for_date,room_no));
+
+create table dues( room_no varchar(225), guestname varchar(225), booked_by_roll varchar(10), due int , foreign key (room_no) references rooms(room_no),foreign key (booked_by_roll) references person(roll_no));
+
+create table status(roll_no varchar(225),room_no varchar(225),payment_status varchar(225),amount_paid int,paid_by varchar(225) , payment_id varchar(225), primary key (payment_id), foreign key (roll_no) references person(roll_no),foreign key (room_no) references rooms(room_no));
+
+create table expenditure( date_of_expence date, expended_on varchar(225), expence int );
+
+delimiter //
+   
+-- insert into person values ('2001cs43','prateek','kusuma_2001cs43@iitp.ac.in','password@0','cse','kalam','A516')//
+-- insert into staff values ('staff1','attender','staffid1','123456789')//
+-- insert into rooms values('g001','2001cs43','staffid1')//
+
+create trigger Table1Trigger after insert on guests
+    for each row
+    begin
+    insert into dues(room_no,  guestname,booked_by_roll,due) values (new.room_no, new.guest_name,new.related_to_roll, datediff(new.check_out,new.check_in)*500);
+    update dues set due= 0
+    WHERE room_no = new.room_no and booked_by_roll= new.related_to_roll and guestname != new.guest_name;
+    end//
+    
+create trigger Table11Trigger after update on guests
+    for each row
+    begin
+    update dues set due= due - datediff(old.check_out,old.check_in)*500 +  datediff(new.check_out,new.check_in)*500
+    WHERE room_no = new.room_no;
+    
+    end//
+    
+create trigger Table12Trigger before delete on guests
+    for each row
+    begin
+    update dues set due= due - datediff(old.check_out,old.check_in)*500
+    WHERE room_no = old.room_no;
+  
+    end//
+    
+    
+
+    
+create trigger Table2Trigger after insert on food
+    for each row
+    begin
+    UPDATE dues SET due = due + new.bf_count * 50 + new.lunch_count * 50 + new.dinner_count * 50
+    WHERE room_no = new.room_no and guestname = new.guest_name;
+    update dues set due= due
+    WHERE room_no = new.room_no  and guestname != new.guest_name;
+    end//
+    
+create trigger Table21Trigger after update on food
+    for each row
+    begin
+    update dues set due= due -(old.bf_count * 50 + old.lunch_count * 50 + old.dinner_count * 50 ) + (new.bf_count * 50 + new.lunch_count * 50 + new.dinner_count * 50 )
+    WHERE room_no = new.room_no ;
+
+    end//
+    
+create trigger Table3Trigger after insert on status
+    for each row
+    begin
+    UPDATE dues SET due =due - new.amount_paid 
+    WHERE room_no = new.room_no and booked_by_roll= new.roll_no and guestname = new.paid_by;
+
+    end//
+
+create trigger Table31Trigger after update on status
+    for each row
+    begin
+    UPDATE dues SET due = due - new.amount_paid + old.amount_paid
+    WHERE room_no = new.room_no and booked_by_roll= new.roll_no and guestname = new.paid_by;
+
+    end//
+
+-- insert into guests values ('2001cs43','rajesh','000001','teacher','g001','2022-10-20','2022-10-29')//
+-- insert into guests values ('2001cs43','rajes','0000011','teacher','g002','2022-10-25','2022-10-29')//
+
+-- select  * from guests//
+-- select * from dues//
+
+-- insert into food values ('2022-10-21',2,2,2,'g001')//
+-- insert into food values ('2022-10-22',2,2,2,'g002')//
+-- select * from dues//
+
+
+-- insert into status values ('2001cs43','g001','done',500,'2022-10-29','123456412563');
+-- update status set amount_paid=1000 where room_no = 'g001' and roll_no='2001cs43'//
+select * from dues//
+select * from food//
+ 
+
+SELECT* from dues;
+mysql> show tables;
++-------------------+
+| Tables_in_prateek |
++-------------------+
+| booking           |
+| dues              |
+| food              |
+| guests            |
+| person            |
+| rooms             |
+| staff             |
+| status            |
++-------------------+
+8 rows in set (0.02 sec)
+
+mysql> describe person;
++-------------+--------------+------+-----+---------+-------+
+| Field       | Type         | Null | Key | Default | Extra |
++-------------+--------------+------+-----+---------+-------+
+| roll_no     | varchar(10)  | NO   | PRI | NULL    |       |
+| name        | varchar(225) | NO   |     | NULL    |       |
+| email       | varchar(225) | NO   |     | NULL    |       |
+| password    | varchar(225) | NO   |     | NULL    |       |
+| branch      | varchar(225) | NO   |     | NULL    |       |
+| hostel_name | varchar(225) | NO   |     | NULL    |       |
+| room_no     | varchar(10)  | NO   |     | NULL    |       |
++-------------+--------------+------+-----+---------+-------+
+7 rows in set (0.01 sec)
+
+mysql> describe booking;
++-------------------+-------------+------+-----+---------+-------+
+| Field             | Type        | Null | Key | Default | Extra |
++-------------------+-------------+------+-----+---------+-------+
+| booked_by_roll_no | varchar(10) | YES  | MUL | NULL    |       |
+| no_of_guests      | int         | YES  |     | NULL    |       |
+| no_of_rooms       | int         | YES  |     | NULL    |       |
++-------------------+-------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> describe dues;
++----------------+--------------+------+-----+---------+-------+
+| Field          | Type         | Null | Key | Default | Extra |
++----------------+--------------+------+-----+---------+-------+
+| room_no        | varchar(225) | YES  | MUL | NULL    |       |
+| guestname      | varchar(225) | YES  |     | NULL    |       |
+| booked_by_roll | varchar(10)  | YES  | MUL | NULL    |       |
+| due            | int          | YES  |     | NULL    |       |
++----------------+--------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> describe food;
++--------------+--------------+------+-----+---------+-------+
+| Field        | Type         | Null | Key | Default | Extra |
++--------------+--------------+------+-----+---------+-------+
+| for_date     | date         | NO   | PRI | NULL    |       |
+| bf_count     | int          | YES  |     | NULL    |       |
+| lunch_count  | int          | YES  |     | NULL    |       |
+| dinner_count | int          | YES  |     | NULL    |       |
+| guest_name   | varchar(225) | YES  |     | NULL    |       |
+| room_no      | varchar(225) | NO   | PRI | NULL    |       |
++--------------+--------------+------+-----+---------+-------+
+6 rows in set (0.00 sec)
+
+mysql> describe guests;
++-----------------+--------------+------+-----+---------+-------+
+| Field           | Type         | Null | Key | Default | Extra |
++-----------------+--------------+------+-----+---------+-------+
+| related_to_roll | varchar(10)  | YES  | MUL | NULL    |       |
+| guest_name      | varchar(225) | NO   | PRI | NULL    |       |
+| aadhar_no       | varchar(225) | YES  |     | NULL    |       |
+| occupation      | varchar(225) | YES  |     | NULL    |       |
+| room_no         | varchar(225) | YES  | MUL | NULL    |       |
+| check_in        | date         | YES  |     | NULL    |       |
+| check_out       | date         | YES  |     | NULL    |       |
++-----------------+--------------+------+-----+---------+-------+
+7 rows in set (0.00 sec)
+
+mysql> describe room;
+
+mysql> describe rooms;
++----------------+--------------+------+-----+---------+-------+
+| Field          | Type         | Null | Key | Default | Extra |
++----------------+--------------+------+-----+---------+-------+
+| room_no        | varchar(225) | NO   | PRI | NULL    |       |
+| booked_by_roll | varchar(10)  | YES  | MUL | NULL    |       |
+| staff_id       | varchar(225) | YES  | MUL | NULL    |       |
++----------------+--------------+------+-----+---------+-------+
+3 rows in set (0.01 sec)
+
+mysql> describe staff;
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| name     | varchar(225) | YES  |     | NULL    |       |
+| role     | varchar(225) | YES  |     | NULL    |       |
+| staff_id | varchar(225) | NO   | PRI | NULL    |       |
+| phone_no | varchar(10)  | YES  |     | NULL    |       |
++----------+--------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> describe status;
++----------------+--------------+------+-----+---------+-------+
+| Field          | Type         | Null | Key | Default | Extra |
++----------------+--------------+------+-----+---------+-------+
+| roll_no        | varchar(225) | YES  | MUL | NULL    |       |
+| room_no        | varchar(225) | YES  | MUL | NULL    |       |
+| payment_status | varchar(225) | YES  |     | NULL    |       |
+| amount_paid    | int          | YES  |     | NULL    |       |
+| paid_by        | varchar(225) | YES  |     | NULL    |       |
+| payment_id     | varchar(225) | NO   | PRI | NULL    |       |
++----------------+--------------+------+-----+---------+-------+
+6 rows in set (0.01 sec)
+
+mysql> describe expenditure;
++-----------------+--------------+------+-----+---------+-------+
+| Field           | Type         | Null | Key | Default | Extra |
++-----------------+--------------+------+-----+---------+-------+
+| date_of_expence | date         | YES  |     | NULL    |       |
+| expended_on     | varchar(225) | YES  |     | NULL    |       |
+| expence         | int          | YES  |     | NULL    |       |
++-----------------+--------------+------+-----+---------+-------+
+3 rows in set (0.01 sec)
+ 
+ LOAD DATA INFILE '"C:\Users\DELL\OneDrive\Desktop\person.csv"' 
+INTO TABLE person 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;//
+
+ LOAD DATA INFILE '"C:\Users\DELL\OneDrive\Desktop\booking.csv"' 
+INTO TABLE person 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;//
+
+ LOAD DATA INFILE '"C:\Users\DELL\OneDrive\Desktop\food.csv"' 
+INTO TABLE person 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;//
+
+ LOAD DATA INFILE '"C:\Users\DELL\OneDrive\Desktop\guests.csv"' 
+INTO TABLE person 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;//
+
+ LOAD DATA INFILE '"C:\Users\DELL\OneDrive\Desktop\rooms.csv"' 
+INTO TABLE person 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;//
+
+ LOAD DATA INFILE '"C:\Users\DELL\OneDrive\Desktop\staff.csv"' 
+INTO TABLE person 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;//
+
+ LOAD DATA INFILE '"C:\Users\DELL\OneDrive\Desktop\status.csv"' 
+INTO TABLE person 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;//
+
+LOAD DATA INFILE '"C:\Users\DELL\OneDrive\Desktop\expenditure.csv"' 
+INTO TABLE person 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;//
+
+select * from person;//
+
++----------+--------+---------+----------+--------+-------------+---------+
+| roll_no  | name   | email   | password | branch | hostel_name | room_no |
++----------+--------+---------+----------+--------+-------------+---------+
+| 2301ce08 | name8  | email8  | pass8    | ce     | asima       | b004    |
+| 2301ce09 | name9  | email9  | pass9    | ce     | asima       | b005    |
+| 2301ce10 | name10 | email10 | pass10   | ce     | asima       | b006    |
+| 2301ce11 | name11 | email11 | pass11   | ce     | kalam       | a101    |
+| 2301ce12 | name12 | email12 | pass12   | ce     | kalam       | a102    |
+| 2301ce13 | name13 | email13 | pass13   | ce     | kalam       | a103    |
+| 2301cs01 | name1  | email1  | pass1    | cse    | kalam       | a001    |
+| 2301cs02 | name2  | email2  | pass2    | cse    | kalam       | a002    |
+| 2301cs03 | name3  | email3  | pass3    | cse    | kalam       | a003    |
+| 2301cs04 | name4  | email4  | pass4    | cse    | kalam       | a004    |
+| 2301cs05 | name5  | email5  | pass5    | cse    | kalam       | a005    |
+| 2301cs06 | name6  | email6  | pass6    | cse    | asima       | b002    |
+| 2301cs07 | name7  | email7  | pass7    | cse    | asima       | b003    |
+| 2301me14 | name14 | email14 | pass14   | me     | kalam       | a104    |
+| 2301me15 | name15 | email15 | pass15   | me     | kalam       | a105    |
+| 2301me16 | name16 | email16 | pass16   | me     | kalam       | a106    |
+| 2301me17 | name17 | email17 | pass17   | me     | kalam       | a107    |
+| 2301me18 | name18 | email18 | pass18   | me     | cvr         | c210    |
+| 2301me19 | name19 | email19 | pass19   | me     | cvr         | c211    |
+| 2301me20 | name20 | email20 | pass20   | me     | cvr         | c212    |
++----------+--------+---------+----------+--------+-------------+---------+
+20 rows in set (0.04 sec)
+
+select * from booking;//
++-------------------+--------------+-------------+
+| booked_by_roll_no | no_of_guests | no_of_rooms |
++-------------------+--------------+-------------+
+| 2301cs01          |            2 |           1 |
+| 2301cs02          |            3 |           1 |
+| 2301cs03          |            2 |           1 |
+| 2301cs05          |            2 |           1 |
+| 2301ce11          |            1 |           1 |
+| 2301ce13          |            2 |           1 |
+| 2301me14          |            1 |           1 |
+| 2301me15          |            2 |           1 |
+| 2301me16          |            1 |           1 |
++-------------------+--------------+-------------+
+9 rows in set (0.02 sec)
+
+select * from staff;//
++-------------+----------+------------+------------+
+| name        | role     | staff_id   | phone_no   |
++-------------+----------+------------+------------+
+| staffname1  | attender | staff_id1  | 8919348801 |
+| staffname10 | cleaner  | staff_id10 | 8919348810 |
+| staffname2  | attender | staff_id2  | 8919348802 |
+| staffname3  | attender | staff_id3  | 8919348803 |
+| staffname4  | cook     | staff_id4  | 8919348804 |
+| staffname5  | cook     | staff_id5  | 8919348805 |
+| staffname6  | cook     | staff_id6  | 8919348806 |
+| staffname7  | cook     | staff_id7  | 8919348807 |
+| staffname8  | cleaner  | staff_id8  | 8919348808 |
+| staffname9  | cleaner  | staff_id9  | 8919348809 |
++-------------+----------+------------+------------+
+10 rows in set (0.02 sec)
+
+select * from rooms;//
++---------+----------------+-----------+
+| room_no | booked_by_roll | staff_id  |
++---------+----------------+-----------+
+| g001    | 2301cs01       | staff_id1 |
+| g002    | 2301cs02       | staff_id1 |
+| g003    | 2301cs03       | staff_id2 |
+| g004    | 2301ce11       | staff_id2 |
+| g005    | 2301ce13       | staff_id3 |
+| g006    | 2301me15       | staff_id4 |
+| g007    | 2301me14       | staff_id4 |
+| g008    | 2301cs05       | staff_id5 |
+| g009    | 2301me16       | staff_id6 |
++---------+----------------+-----------+
+9 rows in set (0.02 sec)
+
+select * from guests;//
++-----------------+------------+-----------+------------+---------+------------+------------+
+| related_to_roll | guest_name | aadhar_no | occupation | room_no | check_in   | check_out  |
++-----------------+------------+-----------+------------+---------+------------+------------+
+| 2301cs01        | guest1     | aadhar1   | occ1       | g001    | 2022-01-01 | 2022-01-03 |
+| 2301cs02        | guest2     | aadhar2   | occ2       | g002    | 2022-01-10 | 2022-01-15 |
+| 2301cs03        | guest3     | aadhar3   | occ3       | g003    | 2022-01-20 | 2022-01-24 |
+| 2301ce11        | guest4     | aadhar4   | occ4       | g004    | 2022-02-25 | 2022-02-27 |
+| 2301ce13        | guest5     | aadhar5   | occ5       | g005    | 2022-02-25 | 2022-02-28 |
+| 2301me15        | guest6     | aadhar6   | occ6       | g006    | 2022-03-06 | 2022-03-12 |
+| 2301me14        | guest7     | aadhar7   | occ7       | g007    | 2022-04-07 | 2022-04-13 |
+| 2301cs05        | guest8     | aadhar8   | occ8       | g008    | 2022-04-08 | 2022-04-12 |
+| 2301me16        | guest9     | aadhar9   | occ9       | g009    | 2022-05-09 | 2022-05-14 |
++-----------------+------------+-----------+------------+---------+------------+------------+
+9 rows in set (0.04 sec)
+
+select * from food;//
++------------+----------+-------------+--------------+------------+---------+
+| for_date   | bf_count | lunch_count | dinner_count | guest_name | room_no |
++------------+----------+-------------+--------------+------------+---------+
+| 2022-01-01 |        2 |           2 |            2 | guest1     | g001    |
+| 2022-01-02 |        1 |           1 |            1 | guest1     | g001    |
+| 2022-01-03 |        2 |           2 |            2 | guest1     | g001    |
+| 2022-01-10 |        1 |           1 |            1 | guest2     | g002    |
+| 2022-01-11 |        2 |           1 |            2 | guest2     | g002    |
+| 2022-01-12 |        1 |           1 |            1 | guest2     | g002    |
+| 2022-01-13 |        2 |           1 |            1 | guest2     | g002    |
+| 2022-01-14 |        1 |           1 |            1 | guest2     | g002    |
+| 2022-01-15 |        1 |           1 |            1 | guest2     | g002    |
+| 2022-01-20 |        1 |           1 |            1 | guest3     | g003    |
+| 2022-01-21 |        1 |           1 |            1 | guest3     | g003    |
+| 2022-01-22 |        1 |           2 |            1 | guest3     | g003    |
+| 2022-01-23 |        1 |           2 |            1 | guest3     | g003    |
+| 2022-01-24 |        1 |           2 |            2 | guest3     | g003    |
+| 2022-02-25 |        1 |           1 |            2 | guest4     | g004    |
+| 2022-02-25 |        1 |           2 |            2 | guest5     | g005    |
+| 2022-02-26 |        2 |           2 |            2 | guest4     | g004    |
+| 2022-02-26 |        1 |           1 |            1 | guest5     | g005    |
+| 2022-02-27 |        2 |           1 |            1 | guest4     | g004    |
+| 2022-02-27 |        2 |           2 |            2 | guest5     | g005    |
+| 2022-02-28 |        1 |           1 |            1 | guest5     | g005    |
+| 2022-03-06 |        2 |           1 |            2 | guest6     | g006    |
+| 2022-03-07 |        1 |           1 |            1 | guest6     | g006    |
+| 2022-03-08 |        2 |           1 |            1 | guest6     | g006    |
+| 2022-03-09 |        1 |           1 |            1 | guest6     | g006    |
+| 2022-03-10 |        2 |           1 |            1 | guest6     | g006    |
+| 2022-03-11 |        1 |           2 |            1 | guest6     | g006    |
+| 2022-03-12 |        2 |           2 |            1 | guest6     | g006    |
+| 2022-04-07 |        1 |           2 |            2 | guest7     | g007    |
+| 2022-04-08 |        1 |           1 |            2 | guest7     | g007    |
+| 2022-04-08 |        1 |           1 |            1 | guest8     | g008    |
+| 2022-04-09 |        1 |           2 |            2 | guest7     | g007    |
+| 2022-04-09 |        1 |           2 |            1 | guest8     | g008    |
+| 2022-04-10 |        1 |           1 |            1 | guest7     | g007    |
+| 2022-04-10 |        1 |           2 |            1 | guest8     | g008    |
+| 2022-04-11 |        1 |           2 |            2 | guest7     | g007    |
+| 2022-04-11 |        1 |           2 |            2 | guest8     | g008    |
+| 2022-04-12 |        1 |           1 |            1 | guest7     | g007    |
+| 2022-04-12 |        1 |           1 |            2 | guest9     | g009    |
+| 2022-04-13 |        1 |           1 |            2 | guest7     | g007    |
+| 2022-05-09 |        1 |           2 |            2 | guest9     | g009    |
+| 2022-05-10 |        1 |           1 |            1 | guest9     | g009    |
+| 2022-05-11 |        1 |           2 |            2 | guest9     | g009    |
+| 2022-05-12 |        1 |           1 |            1 | guest9     | g009    |
+| 2022-05-13 |        1 |           2 |            2 | guest9     | g009    |
+| 2022-05-14 |        1 |           1 |            1 | guest9     | g009    |
++------------+----------+-------------+--------------+------------+---------+
+46 rows in set (0.12 sec)
+
+
+select * from status;//
++----------+---------+----------------+-------------+----------+------------+
+| roll_no  | room_no | payment_status | amount_paid | paid_by  | payment_id |
++----------+---------+----------------+-------------+----------+------------+
+| 2301cs01 | g001    | pending        |         500 | guest1   | payid1     |
+| 2301cs02 | g002    | pending        |         500 | guest2   | payid2     |
+| 2301cs03 | g003    | pending        |         500 | guest3   | payid3     |
+| 2301ce11 | g004    | pending        |         500 | guest4   | payid4     |
+| 2301ce13 | g005    | pending        |         300 | guest5   | payid5     |
+| 2301me15 | g006    | pending        |         500 | guest6   | payid6     |
+| 2301me14 | g007    | pending        |         500 | guest7   | payid7     |
+| 2301cs05 | g008    | pending        |         500 | guest8   | payid8     |
+| 2301me16 | g009    | pending        |         500 | guest9   | payid9     |
++----------+---------+----------------+-------------+----------+------------+
+9 rows in set (0.00 sec)
+
+ SELECT* from dues;//
++---------+-----------+----------------+------+
+| room_no | guestname | booked_by_roll | due  |
++---------+-----------+----------------+------+
+| g001    | guest1    | 2301cs01       | 1250 |
+| g002    | guest2    | 2301cs02       | 3050 |
+| g003    | guest3    | 2301cs03       | 2450 |
+| g004    | guest4    | 2301ce11       | 1200 |
+| g005    | guest5    | 2301ce13       | 2050 |
+| g006    | guest6    | 2301me15       | 3900 |
+| g007    | guest7    | 2301me14       | 3950 |
+| g008    | guest8    | 2301cs05       | 2300 |
+| g009    | guest9    | 2301me16       | 3900 |
++---------+-----------+----------------+------+
+
+ SELECT* from expenditure;//
++-----------------+--------------+---------+
+| date_of_expence | expended_on  | expence |
++-----------------+--------------+---------+
+| 2021-10-01      | dispencers   |    2000 |
+| 2021-10-15      | tools        |     500 |
+| 2022-01-05      | utencels     |    1000 |
+| 2022-10-06      | medical kits |    2500 |
+| 2022-11-19      | repairs      |    5000 |
++-----------------+--------------+---------+
+
+select*from expenditure//
+
+
+CREATE PROCEDURE personADDUPDEL(IN command VARCHAR(20),IN roll_no2 varchar(10),IN name2 varchar(225) ,IN email2 varchar(225),IN password2 varchar(225),IN branch2 varchar(225),IN hostel_name2 varchar(225),IN room_no2 varchar(10))
+BEGIN DECLARE D1 int; DECLARE D2 int;
+IF command='INSERT' THEN  INSERT INTO person VALUES(roll_no2,name2,email2,password2,branch2,hostel_name2,room_no2); END IF; 
+IF command='SELECT' THEN  SELECT* FROM person; END IF;
+IF command='DELETE' THEN  DELETE FROM person WHERE roll_no = roll_no2; END IF;
+IF command='UPDATE' THEN  UPDATE person SET name=name2,email=email2,password=password2,branch=branch2,hostel_name=hostel_name2,room_no=room_no2 WHERE roll_no = roll_no2; END IF; END//
+
+
+CREATE PROCEDURE guestsADDUPDEL( IN command VARCHAR(20), IN related_to_roll1 varchar(10), IN guest_name1 varchar(225),IN aadhar_no1 varchar(225),IN occupation1 varchar(225), IN room_no1 varchar(225),IN check_in1 date,IN check_out1 date) 
+BEGIN DECLARE c1 int; DECLARE c2 int;
+IF command='INSERT' THEN  INSERT INTO guests VALUES(related_to_rol1,guest_name1,aadhar_no1,occupation1,room_no1,check_in1,check_out1); END IF; 
+IF command='SELECT' THEN  SELECT* FROM guests; END IF;
+IF command='DELETE' THEN  DELETE FROM guests WHERE related_to_roll = related_to_roll1; END IF;
+IF command='UPDATE' THEN  UPDATE guests SET guest_name=guest_name1,aadhar_no=aadhar_no1,occupation=occupation1,room_no=room_no1,check_in=check_in1,check_out=check_out1 WHERE related_to_roll=related_to_roll1; END IF; END//
+
+call personADDUPDEL('INSERT','2001CS43','PRATEEK','PRA000@GMAIL.COM','ASDDF','CSE','KALAM','A516');
+call personADDUPDEL('SELECT','2001CS43','PRATEEK','PRA000@GMAIL.COM','ASDDF','CSE','KALAM','A516');
+
+Query OK, 1 row affected (0.01 sec)
+
++----------+---------+------------------+----------+--------+-------------+---------+
+| roll_no  | name    | email            | password | branch | hostel_name | room_no |
++----------+---------+------------------+----------+--------+-------------+---------+
+| 2001CS43 | PRATEEK | PRA000@GMAIL.COM | ASDDF    | CSE    | KALAM       | A516    |
+| 2301ce08 | name8   | email8           | pass8    | ce     | asima       | b004    |
+| 2301ce09 | name9   | email9           | pass9    | ce     | asima       | b005    |
+| 2301ce10 | name10  | email10          | pass10   | ce     | asima       | b006    |
+| 2301ce11 | name11  | email11          | pass11   | ce     | kalam       | a101    |
+| 2301ce12 | name12  | email12          | pass12   | ce     | kalam       | a102    |
+| 2301ce13 | name13  | email13          | pass13   | ce     | kalam       | a103    |
+| 2301cs01 | name1   | email1           | pass1    | cse    | kalam       | a001    |
+| 2301cs02 | name2   | email2           | pass2    | cse    | kalam       | a002    |
+| 2301cs03 | name3   | email3           | pass3    | cse    | kalam       | a003    |
+| 2301cs04 | name4   | email4           | pass4    | cse    | kalam       | a004    |
+| 2301cs05 | name5   | email5           | pass5    | cse    | kalam       | a005    |
+| 2301cs06 | name6   | email6           | pass6    | cse    | asima       | b002    |
+| 2301cs07 | name7   | email7           | pass7    | cse    | asima       | b003    |
+| 2301me14 | name14  | email14          | pass14   | me     | kalam       | a104    |
+| 2301me15 | name15  | email15          | pass15   | me     | kalam       | a105    |
+| 2301me16 | name16  | email16          | pass16   | me     | kalam       | a106    |
+| 2301me17 | name17  | email17          | pass17   | me     | kalam       | a107    |
+| 2301me18 | name18  | email18          | pass18   | me     | cvr         | c210    |
+| 2301me19 | name19  | email19          | pass19   | me     | cvr         | c211    |
+| 2301me20 | name20  | email20          | pass20   | me     | cvr         | c212    |
++----------+---------+------------------+----------+--------+-------------+---------+
+21 rows in set (0.01 sec)
+
+CALL guestsADDUPDEL('DELETE','2301cs01','guest1','aadhar1','occ1','g001','2022-01-01','2022-01-03');
+CALL guestsADDUPDEL('SELECT','2301cs01','guest1','aadhar1','occ1','g001','2022-01-01','2022-01-03');
+
+Query OK, 1 row affected (0.07 sec)
+
++-----------------+------------+-----------+------------+---------+------------+------------+
+| related_to_roll | guest_name | aadhar_no | occupation | room_no | check_in   | check_out  |
++-----------------+------------+-----------+------------+---------+------------+------------+
+| 2301cs02        | guest2     | aadhar2   | occ2       | g002    | 2022-01-10 | 2022-01-15 |
+| 2301cs03        | guest3     | aadhar3   | occ3       | g003    | 2022-01-20 | 2022-01-24 |
+| 2301ce11        | guest4     | aadhar4   | occ4       | g004    | 2022-02-25 | 2022-02-27 |
+| 2301ce13        | guest5     | aadhar5   | occ5       | g005    | 2022-02-25 | 2022-02-28 |
+| 2301me15        | guest6     | aadhar6   | occ6       | g006    | 2022-03-06 | 2022-03-12 |
+| 2301me14        | guest7     | aadhar7   | occ7       | g007    | 2022-04-07 | 2022-04-13 |
+| 2301cs05        | guest8     | aadhar8   | occ8       | g008    | 2022-04-08 | 2022-04-12 |
+| 2301me16        | guest9     | aadhar9   | occ9       | g009    | 2022-05-09 | 2022-05-14 |
++-----------------+------------+-----------+------------+---------+------------+------------+
+8 rows in set (0.07 sec)
+
+
+-- for monthly expenditure bill
+-- create table expenditure( date_of_expence date, expended_on varchar(225), expence int );
+SELECT year(date_of_expence) as yyyy, monthname(date_of_expence) as mm,
+      SUM(expence) AS Total
+FROM expenditure p
+GROUP BY year(date_of_expence), monthname(date_of_expence)
+ORDER BY MIN(date_of_expence);
+
++------+----------+-------+
+| yyyy | mm       | Total |
++------+----------+-------+
+| 2021 | October  |  2500 |
+| 2022 | January  |  1000 |
+| 2022 | October  |  2500 |
+| 2022 | November |  5000 |
++------+----------+-------+
+4 rows in set (0.01 sec)
+
+-- find total due for roll no 2031cs02
+ select booked_by_roll,SUM(due) as Total from dues where booked_by_roll='2301cs02'//
++----------------+-------+
+| booked_by_roll | Total |
++----------------+-------+
+| 2301cs02       |  3050 |
++----------------+-------+
+
+--find total expence in an year
+SELECT year(date_of_expence) as yyyy,
+      SUM(expence) AS Total
+FROM expenditure p
+GROUP BY year(date_of_expence)
+ORDER BY MIN(date_of_expence);
++------+-------+
+| yyyy | Total |
++------+-------+
+| 2021 |  2500 |
+| 2022 |  8500 |
++------+-------+
+2 rows in set (0.00 sec)
+
+--find the no of days the guests have stayed 
+select guest_name, datediff(check_out,check_in) as days
+from guests 
+order by days//
+
++------------+------+
+| guest_name | days |
++------------+------+
+| guest4     |    2 |
+| guest5     |    3 |
+| guest3     |    4 |
+| guest8     |    4 |
+| guest2     |    5 |
+| guest9     |    5 |
+| guest6     |    6 |
+| guest7     |    6 |
++------------+------+
+8 rows in set (0.00 sec)
+
+-- who is having the 3 higest due 
+select guestname , booked_by_roll , due 
+from dues 
+order by due desc limit 3//
+  
++-----------+----------------+------+
+| guestname | booked_by_roll | due  |
++-----------+----------------+------+
+| guest7    | 2301me14       | 3950 |
+| guest6    | 2301me15       | 3900 |
+| guest9    | 2301me16       | 3900 |
++-----------+----------------+------+
+3 rows in set (0.00 sec)
+
+-- checking the trigger statements
+
+ select * from dues//
++---------+-----------+----------------+------+
+| room_no | guestname | booked_by_roll | due  |
++---------+-----------+----------------+------+
+| g001    | guest1    | 2301cs01       |  250 |
+| g002    | guest2    | 2301cs02       | 3050 |
+| g003    | guest3    | 2301cs03       | 2450 |
+| g004    | guest4    | 2301ce11       | 1200 |
+| g005    | guest5    | 2301ce13       | 2050 |
+| g006    | guest6    | 2301me15       | 3900 |
+| g007    | guest7    | 2301me14       | 3950 |
+| g008    | guest8    | 2301cs05       | 2300 |
+| g009    | guest9    | 2301me16       | 3900 |
++---------+-----------+----------------+------+
+9 rows in set (0.00 sec)
+
+
+
+LOCK TABLES person,booking,staff,guests,dues,expenditure,rooms,food,status WRITE; -- the next prompt appears once you've obtained the lock
+DROP TRIGGER Table3Trigger,Table31Trigger; 
+
+ create trigger Table3Trigger after insert on status
+    for each row
+    begin
+    UPDATE dues SET due =due - new.amount_paid 
+    WHERE room_no = new.room_no and booked_by_roll= new.roll_no;
+
+    end//
+
+create trigger Table31Trigger after update on status
+    for each row
+    begin
+    UPDATE dues SET due = due - new.amount_paid + old.amount_paid
+    WHERE room_no = new.room_no and booked_by_roll= new.roll_no;
+
+    end//
+
+UNLOCK TABLES//
+
+insert into status values ('2301cs01','g001','done',250,'kpr','123456412563');
+select * from dues//
++---------+-----------+----------------+------+
+| room_no | guestname | booked_by_roll | due  |
++---------+-----------+----------------+------+
+| g001    | guest1    | 2301cs01       |    0 |
+| g002    | guest2    | 2301cs02       | 3050 |
+| g003    | guest3    | 2301cs03       | 2450 |
+| g004    | guest4    | 2301ce11       | 1200 |
+| g005    | guest5    | 2301ce13       | 2050 |
+| g006    | guest6    | 2301me15       | 3900 |
+| g007    | guest7    | 2301me14       | 3950 |
+| g008    | guest8    | 2301cs05       | 2300 |
+| g009    | guest9    | 2301me16       | 3900 |
++---------+-----------+----------------+------+
+9 rows in set (0.00 sec)
+
+**********************************************************************************************************************************************************************************************************************************
+**********************************************************************************************************************************************************************************************************************************
+
+https://dbdiagram.io/d/6373b25ec9abfc611172d9a4
+
+table person{
+roll_no varchar [pk]
+name varchar
+email varchar
+password varchar
+branch varchar
+hostel_name varchar
+room_no varchar 
+  
+}
+table booking{
+booked_by_roll_no varchar [ref: > person.roll_no]
+no_of_guests int
+no_of_rooms int
+
+  
+}
+table staff{
+staff_id varchar [pk]
+name varchar
+role varchar
+phone_no varchar
+
+}
+
+table rooms{
+room_no varchar [pk] 
+booked_by_roll varchar [ref: > person.roll_no]
+staff_id varchar  [ref: > staff.staff_id]
+
+  
+}
+table guests{
+related_to_roll varchar [ref: > person.roll_no]
+guest_name varchar
+aadhar_no varchar
+occupation varchar
+room_no varchar  
+check_in date
+check_out date
+
+}
+table food{
+
+for_date date [pk]
+bf_count int
+lunch_count int
+dinner_count int  
+guest_name varchar
+room_no varchar [pk]
+
+}
+table dues{
+
+room_no varchar [ref: > rooms.room_no]
+guestname varchar
+booked_by_roll varchar [ref: > person.roll_no]
+due int  
+
+
+}
+
+Ref{
+  food.room_no > rooms.room_no
+
+}
+
+table status{
+
+room_no varchar [ref: > rooms.room_no]
+roll_no varchar [ref: > person.roll_no]
+payment_status varchar
+amount_paid int
+paid_by varchar
+payment_id varchar [pk]
+
+
+}
+table expenditure{
+date_of_expence date
+expended_on varchar
+expence int
+}
+
+

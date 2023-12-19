@@ -1,0 +1,16 @@
+payment_id,license_id,payment_category,amount,penalty,last_date,status,paid_on
+sbi124,license_1,rent,10000,0,11/26/2022,paid ,10/5/2022
+cnrb231,license_2,rent ,8000,2000,11/27/2022,not paid,10/15/2022
+icici456,license_5,electricity,5000,1000,11/18/2022,paid ,10/21/2022
+ktk123,license_6,rent,8000,0,12/2/2022,pending approval,10/28/2022
+axis342,license_4,electricity,6000,0,12/15/2022,not paid,11/1/2022
+icici678,license_3,rent,9000,0,11/1/2022,paid ,11/10/2022
+ktk235,license_1,electricity,7000,0,12/5/2022,pending approval,11/18/2022
+axis456,license_2,rent,8000,0,12/15/2022,not paid,11/21/2022
+sbi364,license_5,electricity,4000,3000,12/20/2022,paid ,11/18/2022
+cnrb588,license_6,rent,8000,0,11/8/2022,not paid,11/14/2022
+icici979,license_1,electricity,10000,0,1/6/2023,paid ,11/6/2022
+ktk186,license_4,rent,12000,0,1/7/2023,paid ,11/12/2022
+axis879,license_3,rent,9000,0,12/8/2022,pending approval,11/10/2022
+icici438,license_2,electricity,6000,1000,12/9/2022,not paid,11/11/2022
+sbi769,license_5,rent,9500,0,12/10/2022,pending approval,11/5/2022
